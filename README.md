@@ -5,7 +5,7 @@
 GRANDcase.FM is a podcast application built using [GRANDstack (GraphQL, React, Apollo, Neo4j Database)](https://grandstack.io). It is being built one episode at a time on the [Neo4j Livestream](https://twitch.tv/neo4j_). You can join live at [twitch.tv/neo4j\_](https://twitch.tv/neo4j_) Thursdays at 2pm US Pacific time or watch the stream recordings below.
 
 - **Episode 1:** Podcast Search GraphQL API ([Video recording](https://www.youtube.com/watch?v=lsGgFxGwHlw&list=PL9Hl4pk2FsvUQ5bDoLPhN_aYJNQjkQJh_&index=2), [Blog post](https://lyonwj.com/blog/grandstack-podcast-app-podcast-search-graphql-api))
-- **Episode 2:** User Auth (Sign Up and Login) & Podcast Subscribe ([Video recording](https://www.youtube.com/watch?v=IOXmrIYij_g&list=PL9Hl4pk2FsvUQ5bDoLPhN_aYJNQjkQJh_), [git commit](https://www.youtube.com/watch?v=IOXmrIYij_g&list=PL9Hl4pk2FsvUQ5bDoLPhN_aYJNQjkQJh_))
+- **Episode 2:** User Auth (Sign Up and Login) & Podcast Subscribe ([Video recording](https://www.youtube.com/watch?v=IOXmrIYij_g&list=PL9Hl4pk2FsvUQ5bDoLPhN_aYJNQjkQJh_), [git commit](https://github.com/johnymontana/grandcast.fm/commit/8d668bfa45ec021a76cef1af280fc8f32e13cd76))
 
 <hr>
 
