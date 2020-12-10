@@ -1,6 +1,12 @@
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://grandstack.io/deploy-starter-netlify) [![Deploy to Vercel](https://vercel.com/button)](https://grandstack.io/deploy-starter-vercel) [![Provision Neo4j](https://grandstack.io/img/provision-neo4j.png)](https://sandbox.neo4j.com/?usecase=blank-sandbox)
+![GRANDcast.FM: Podcast app built with GRANDstack](img/grandcast.png)
 
-# GRANDstack Starter
+# GRANDcast.FM
+
+GRANDcase.FM is a podcast application built using [GRANDstack (GraphQL, React, Apollo, Neo4j Database)](https://grandstack.io). It is being built one episode at a time on the [Neo4j Livestream](https://twitch.tv/neo4j_). You can join live at [twitch.tv/neo4j\_](https://twitch.tv/neo4j_) Thursdays at 2pm US Pacific time or watch the stream recordings below.
+
+- **Episode 1:** [Podcast Search GraphQL API](https://www.youtube.com/watch?v=lsGgFxGwHlw&list=PL9Hl4pk2FsvUQ5bDoLPhN_aYJNQjkQJh_&index=2)
+
+# This project was bootstrapped from `create-grandstack-app`
 
 ```
 npx create-grandstack-app myNewApp
