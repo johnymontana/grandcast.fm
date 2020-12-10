@@ -21,6 +21,25 @@ type Query {
       }
       """
     )
+  currentUser: User
+    @cypher(
+      statement: """
+      MATCH (u:User {id: $cypherParams.userId})
+      RETURN u
+      """
+    )
+  subscribedPodcasts: [Podcast]
+    @cypher(
+      statement: """
+      MATCH (u:User {id: $cypherParams.userId})-[:SUBSCRIBES_TO]->(p:Podcast)
+      RETURN p
+      """
+    )
+}
+
+type User {
+  username: String
+  id: ID!
 }
 
 type PodcastSearchResult {
@@ -30,4 +49,45 @@ type PodcastSearchResult {
   feedURL: String
   artwork: String
   categories: [String]
+}
+
+type AuthToken {
+  token: String!
+}
+
+type Podcast {
+  itunesId: ID!
+  title: String
+  link: String
+  feedURL: String
+  description: String
+  image: String
+}
+
+type Mutation {
+  signup(username: String!, password: String!): AuthToken
+  login(username: String!, password: String!): AuthToken
+  subscribeToPodcast(itunesId: String!): Podcast
+    @cypher(
+      statement: """
+      WITH toString(timestamp()/1000) AS timestamp
+      WITH {
+      `User-Agent`: 'GRANDstackFM',
+      `X-Auth-Date`: timestamp,
+      `X-Auth-Key`: apoc.static.get('podcastkey'),
+      `Authorization`: apoc.util.sha1([apoc.static.get('podcastkey')+apoc.static.get('podcastsecret') +timestamp])
+      } AS headers
+      CALL apoc.load.jsonParams('https://api.podcastindex.org/api/1.0/podcasts/byitunesid?id=' + apoc.text.urlencode($itunesId), headers, '', '') YIELD value
+      WITH value.feed AS feed
+      MATCH (u:User {id: $cypherParams.userId})
+      MERGE (p:Podcast {itunesId: $itunesId})
+      SET p.title       = feed.title,
+          p.link        = feed.link,
+          p.description = feed.description,
+          p.feedURL     = feed.url,
+          p.image       = feed.artwork
+      MERGE (u)-[:SUBSCRIBES_TO]->(p)
+      RETURN p
+      """
+    )
 }

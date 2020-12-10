@@ -6,6 +6,9 @@ import { makeAugmentedSchema } from 'neo4j-graphql-js'
 import dotenv from 'dotenv'
 import { initializeDatabase } from './initialize'
 
+import jwt from 'jsonwebtoken'
+import { compareSync, hashSync } from 'bcrypt'
+
 // set environment variables from .env
 dotenv.config()
 
@@ -19,14 +22,70 @@ const app = express()
  * https://grandstack.io/docs/neo4j-graphql-js-api.html#makeaugmentedschemaoptions-graphqlschema
  */
 
+const resolvers = {
+  Mutation: {
+    signup: (obj, args, context, info) => {
+      args.password = hashSync(args.password, 10)
+
+      const session = context.driver.session()
+
+      return session
+        .run(
+          `
+        CREATE (u:User) SET u += $args, u.id = randomUUID()
+        RETURN u
+      `,
+          { args }
+        )
+        .then((res) => {
+          session.close()
+          const { id, username } = res.records[0].get('u').properties
+
+          return {
+            token: jwt.sign({ id, username }, process.env.JWT_SECRET, {
+              expiresIn: '30d',
+            }),
+          }
+        })
+    },
+    login: (obj, args, context, info) => {
+      const session = context.driver.session()
+
+      return session
+        .run(
+          `
+        MATCH (u:User {username: $username})
+        RETURN u LIMIT 1
+      `,
+          { username: args.username }
+        )
+        .then((res) => {
+          session.close()
+
+          const { id, username, password } = res.records[0].get('u').properties
+          if (!compareSync(args.password, password)) {
+            throw new Error('Authorization Error')
+          }
+
+          return {
+            token: jwt.sign({ id, username }, process.env.JWT_SECRET, {
+              expiresIn: '30d',
+            }),
+          }
+        })
+    },
+  },
+}
+
 const schema = makeAugmentedSchema({
   typeDefs,
+  resolvers,
   config: {
     query: {
-      exclude: ['PodcastSearchResult'],
+      exclude: ['PodcastSearchResult', 'AuthToken', 'User'],
     },
     mutation: {
-      exclude: ['PodcastSearchResult'],
+      exclude: ['PodcastSearchResult', 'AuthToken', 'User'],
     },
   },
 })
@@ -73,7 +132,20 @@ const init = async (driver) => {
  * generated resolvers to connect to the database.
  */
 const server = new ApolloServer({
-  context: { driver, neo4jDatabase: process.env.NEO4J_DATABASE },
+  context: ({ req }) => {
+    const token = req?.headers?.authorization?.slice(7)
+    let userId
+
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET)
+      userId = decoded.id
+    }
+    return {
+      cypherParams: { userId },
+      driver,
+      neo4jDatabase: process.env.NEO4J_DATABASE,
+    }
+  },
   schema: schema,
   introspection: true,
   playground: true,
