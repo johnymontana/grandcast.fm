@@ -82,10 +82,10 @@ const schema = makeAugmentedSchema({
   resolvers,
   config: {
     query: {
-      exclude: ['PodcastSearchResult', 'AuthToken', 'User'],
+      exclude: ['PodcastSearchResult', 'AuthToken', 'User', 'Playlist'],
     },
     mutation: {
-      exclude: ['PodcastSearchResult', 'AuthToken', 'User'],
+      exclude: ['PodcastSearchResult', 'AuthToken', 'User', 'Playlist'],
     },
   },
 })
