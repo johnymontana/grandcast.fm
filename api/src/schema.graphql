@@ -35,6 +35,31 @@ type Query {
       RETURN p
       """
     )
+  episodeFeed(first: Int = 10, offset: Int = 0): [Episode]
+    @cypher(
+      statement: """
+      MATCH (u:User {id: $cypherParams.userId})-[:SUBSCRIBES_TO]->(p:Podcast)-[:HAS_EPISODE]->(e:Episode)
+      RETURN e ORDER BY e.pubDate DESC SKIP toInteger($offset) LIMIT toInteger($first)
+      """
+    )
+  playlists: [Playlist]
+    @cypher(
+      statement: """
+      MATCH (u:User {id: $cypherParams.userId})-[:OWNS]->(p:Playlist)
+      RETURN p
+      """
+    )
+}
+
+type Episode {
+  id: ID!
+  pubDate: DateTime
+  summary: String
+  title: String
+  link: String
+  image: String
+  audio: String
+  podcast: Podcast @relation(name: "HAS_EPISODE", direction: "IN")
 }
 
 type User {
@@ -64,6 +89,11 @@ type Podcast {
   image: String
 }
 
+type Playlist {
+  name: String!
+  episodes: [Episode] @relation(name: "IN_PLAYLIST", direction: "IN")
+}
+
 type Mutation {
   signup(username: String!, password: String!): AuthToken
   login(username: String!, password: String!): AuthToken
@@ -87,6 +117,46 @@ type Mutation {
           p.feedURL     = feed.url,
           p.image       = feed.artwork
       MERGE (u)-[:SUBSCRIBES_TO]->(p)
+      WITH p
+      CALL apoc.load.xml(p.feedURL) YIELD value
+      UNWIND value._children AS foo
+      WITH p,[x in foo._children WHERE x._type = \"item\"] AS episodes
+      UNWIND episodes AS episode
+      WITH p,[x in episode._children WHERE x._type =\"title\"][0]._text AS title,
+          [x in episode._children WHERE x._type =\"description\"][0]._text AS summary,
+          [x in episode._children WHERE x._type=\"link\"][0]._text AS link,
+          [x in episode._children WHERE x._type=\"image\"][0].href AS image,
+          [x in episode._children WHERE x._type=\"enclosure\" AND x.type CONTAINS \"audio\" ][0].url AS audio,
+          [x in episode._children WHERE x._type=\"pubDate\"][0]._text AS pubDate,
+          [x in episode._children WHERE x._type =\"guid\"][0]._text AS guid
+
+      MERGE (e:Episode {id: guid})
+      SET e.title = title,
+          e.summary = summary,
+          e.link = link,
+          e.image = image,
+          e.audio = audio,
+          e.pubDate = dateTime({epochMillis: apoc.date.parse(pubDate, 'ms', 'EEE, dd MMM yyyy HH:mm:ss zzz')})
+      MERGE (e)<-[:HAS_EPISODE]-(p)
+
+      RETURN p
+      """
+    )
+  createPlaylist(name: String!): Playlist
+    @cypher(
+      statement: """
+      MATCH (u:User {id: $cypherParams.userId})
+      MERGE (p:Playlist {name: $name})<-[:OWNS]-(u)
+      RETURN p
+      """
+    )
+
+  addEpisodeToPlaylist(name: String!, podcastId: ID!): Playlist
+    @cypher(
+      statement: """
+      MATCH (u:User {id: $cypherParams.userId})-[:OWNS]->(p:Playlist {name: $name})
+      MATCH (e:Episode {id: $podcastId})
+      MERGE (e)-[:IN_PLAYLIST]->(p)
       RETURN p
       """
     )
