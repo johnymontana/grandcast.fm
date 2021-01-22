@@ -7,6 +7,7 @@ GRANDcase.FM is a podcast application built using [GRANDstack (GraphQL, React, A
 - **Episode 1:** Podcast Search GraphQL API ([Video recording](https://www.youtube.com/watch?v=lsGgFxGwHlw&list=PL9Hl4pk2FsvUQ5bDoLPhN_aYJNQjkQJh_&index=2), [Blog post](https://lyonwj.com/blog/grandstack-podcast-app-podcast-search-graphql-api))
 - **Episode 2:** User Auth (Sign Up and Login) & Podcast Subscribe ([Video recording](https://www.youtube.com/watch?v=IOXmrIYij_g&list=PL9Hl4pk2FsvUQ5bDoLPhN_aYJNQjkQJh_), [git commit](https://github.com/johnymontana/grandcast.fm/commit/8d668bfa45ec021a76cef1af280fc8f32e13cd76), [Blog post](https://lyonwj.com/blog/grandstack-podcast-app-user-auth-podcast-subscribe))
 - **Episode 3:** Parsing Podcast Feeds & Playlists ([Video recording](https://www.youtube.com/watch?v=WdClRB_-Egs&list=PL9Hl4pk2FsvUQ5bDoLPhN_aYJNQjkQJh_&index=3), [Blog post](https://lyonwj.com/blog/grandstack-podcast-app-parsing-xml-neo4j-rss-episodes-playlists), [git commit](https://github.com/johnymontana/grandcast.fm/commit/21d457a6d4efadf2118110bc8fdd47e79d4e4a72))
+- **Episode 4:** Next.js & GraphQL Authentication([Video recording](https://www.youtube.com/watch?v=pB4YZBJmMl8), [git commit](https://github.com/johnymontana/grandcast.fm/commit/247aa53426901b0b2951fe152031e1efc8638341))
 
 <hr>
 
