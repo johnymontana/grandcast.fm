@@ -3,35 +3,20 @@ import { useState } from 'react'
 import styles from '../styles/Home.module.css'
 import { gql, useQuery } from '@apollo/client'
 import { useAuth } from '../lib/auth.js'
+import SignIn from '../components/SignIn'
+import Episode from '../components/Episode'
+import { VStack } from '@chakra-ui/react'
 
-const SignIn = () => {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const { signIn } = useAuth()
-
-  function onSubmit(e) {
-    e.preventDefault()
-    signIn({ username, password })
+const PlaylistQuery = gql`
+  {
+    playlists {
+      name
+      episodes {
+        id
+      }
+    }
   }
-
-  return (
-    <div>
-      <form onSubmit={onSubmit}>
-        <input
-          type="text"
-          placeholder="username"
-          onChange={(e) => setUsername(e.target.value)}
-        ></input>
-        <input
-          type="password"
-          placeholder="password"
-          onChange={(e) => setPassword(e.target.value)}
-        ></input>
-        <button type="submit">Log In</button>
-      </form>
-    </div>
-  )
-}
+`
 
 const EpisodeFeed = () => {
   const FeedQuery = gql`
@@ -42,22 +27,39 @@ const EpisodeFeed = () => {
         audio
         podcast {
           title
+          image
         }
+        summary
+        pubDate {
+          day
+          month
+          year
+        }
+        image
+        link
       }
     }
   `
 
   const { data } = useQuery(FeedQuery)
+  const { data: playlistData } = useQuery(PlaylistQuery)
+
   const { signOut } = useAuth()
 
   return (
     <div>
-      <h1>Episode Feed:</h1>
-      <ul>
+      <VStack spacing={8} w="100%">
         {data?.episodeFeed.map((v) => {
-          return <li key={v.id}>{v.title}</li>
+          return (
+            <Episode
+              key={v.id}
+              episode={v}
+              playlists={playlistData?.playlists}
+            />
+          )
+          //return <li key={v.id}>{v.title}</li>
         })}
-      </ul>
+      </VStack>
       <button onClick={() => signOut()}>Sign Out</button>
     </div>
   )
@@ -72,11 +74,8 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className={styles.main}>
-        <h1>GRANDcast.FM</h1>
-        {!isSignedIn() && <SignIn />}
-        {isSignedIn() && <EpisodeFeed />}
-      </main>
+      {!isSignedIn() && <SignIn />}
+      {isSignedIn() && <EpisodeFeed />}
     </div>
   )
 }
