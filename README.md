@@ -9,6 +9,7 @@ GRANDcase.FM is a podcast application built using [GRANDstack (GraphQL, React, A
 - **Episode 3:** Parsing Podcast Feeds & Playlists ([Video recording](https://www.youtube.com/watch?v=WdClRB_-Egs&list=PL9Hl4pk2FsvUQ5bDoLPhN_aYJNQjkQJh_&index=3), [Blog post](https://lyonwj.com/blog/grandstack-podcast-app-parsing-xml-neo4j-rss-episodes-playlists), [git commit](https://github.com/johnymontana/grandcast.fm/commit/21d457a6d4efadf2118110bc8fdd47e79d4e4a72))
 - **Episode 4:** Next.js & GraphQL Authentication([Video recording](https://www.youtube.com/watch?v=pB4YZBJmMl8), [git commit](https://github.com/johnymontana/grandcast.fm/commit/247aa53426901b0b2951fe152031e1efc8638341), [Blog post](https://lyonwj.com/blog/grandstack-podcast-app-next-js-graphql-authentication))
 - **Episode 5:** Chakra UI Component Library([Video recording ](https://www.youtube.com/watch?v=x0_a9tOpExc), [git commit](https://github.com/johnymontana/grandcast.fm/commit/26ab595a9c561c237acdf1c994a2344728bb1836))
+- **Episode 6:** Frontend Features Using Chakra UI, GraphQL, & Apollo Client (Playlists & Podcast search) ([Video recording](https://www.youtube.com/watch?v=UXD89QFg0tU), [git commit](https://github.com/johnymontana/grandcast.fm/commit/0efcb49a683ebe832cfc1ef9fb439544191d4c7d))
 
 <hr>
 
