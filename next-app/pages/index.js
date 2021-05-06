@@ -30,11 +30,7 @@ const EpisodeFeed = () => {
           image
         }
         summary
-        pubDate {
-          day
-          month
-          year
-        }
+        pubDate
         image
         link
       }
