@@ -31,11 +31,7 @@ const GET_PLAYLISTS = gql`
         audio
         summary
         image
-        pubDate {
-          day
-          month
-          year
-        }
+        pubDate
         podcast {
           title
           image

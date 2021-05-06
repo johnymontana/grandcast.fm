@@ -2,7 +2,7 @@ import { typeDefs } from './graphql-schema'
 import { ApolloServer } from 'apollo-server-express'
 import express from 'express'
 import neo4j from 'neo4j-driver'
-import { makeAugmentedSchema } from 'neo4j-graphql-js'
+import { Neo4jGraphQL } from '@neo4j/graphql'
 import dotenv from 'dotenv'
 import { initializeDatabase } from './initialize'
 
@@ -77,15 +77,12 @@ const resolvers = {
   },
 }
 
-const schema = makeAugmentedSchema({
+const neoSchema = new Neo4jGraphQL({
   typeDefs,
   resolvers,
   config: {
-    query: {
-      exclude: ['PodcastSearchResult', 'AuthToken', 'User', 'Playlist'],
-    },
-    mutation: {
-      exclude: ['PodcastSearchResult', 'AuthToken', 'User', 'Playlist'],
+    jwt: {
+      secret: process.env.JWT_SECRET,
     },
   },
 })
@@ -133,20 +130,12 @@ const init = async (driver) => {
  */
 const server = new ApolloServer({
   context: ({ req }) => {
-    const token = req?.headers?.authorization?.slice(7)
-    let userId
-
-    if (token) {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET)
-      userId = decoded.id
-    }
     return {
-      cypherParams: { userId },
+      req,
       driver,
-      neo4jDatabase: process.env.NEO4J_DATABASE,
     }
   },
-  schema: schema,
+  schema: neoSchema.schema,
   introspection: true,
   playground: true,
 })

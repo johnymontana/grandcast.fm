@@ -12,7 +12,7 @@ type Query {
       CALL apoc.load.jsonParams('https://api.podcastindex.org/api/1.0/search/byterm?q=' + apoc.text.urlencode($searchTerm), headers, '', '') YIELD value
       UNWIND value.feeds AS feed
       RETURN {
-       itunesId: feed.itunesId,
+       itunesId: toString(feed.itunesId),
        title: feed.title,
        description: feed.description,
        feedURL: feed.url,
@@ -24,31 +24,32 @@ type Query {
   currentUser: User
     @cypher(
       statement: """
-      MATCH (u:User {id: $cypherParams.userId})
+      MATCH (u:User {id: $auth.jwt.id})
       RETURN u
       """
     )
   subscribedPodcasts: [Podcast]
     @cypher(
       statement: """
-      MATCH (u:User {id: $cypherParams.userId})-[:SUBSCRIBES_TO]->(p:Podcast)
+      MATCH (u:User {id: $auth.jwt.id})-[:SUBSCRIBES_TO]->(p:Podcast)
       RETURN p
       """
     )
   episodeFeed(first: Int = 10, offset: Int = 0): [Episode]
     @cypher(
       statement: """
-      MATCH (u:User {id: $cypherParams.userId})-[:SUBSCRIBES_TO]->(p:Podcast)-[:HAS_EPISODE]->(e:Episode)
-      RETURN e ORDER BY e.pubDate DESC SKIP toInteger($offset) LIMIT toInteger($first)
+      MATCH (u:User {id: $auth.jwt.id})-[:SUBSCRIBES_TO]->(p:Podcast)-[:HAS_EPISODE]->(e:Episode)
+      return e{ .*, pubDate: toString(e.pubDate), podcast: p{.*}}
+      ORDER BY e.pubDate DESC SKIP toInteger($offset) LIMIT toInteger($first)
       """
     )
-  playlists: [Playlist]
-    @cypher(
-      statement: """
-      MATCH (u:User {id: $cypherParams.userId})-[:OWNS]->(p:Playlist)
-      RETURN p
-      """
-    )
+  #playlists: [Playlist]
+  #  @cypher(
+  #    statement: """
+  #    MATCH (u:User {id: $auth.jwt.id})-[:OWNS]->(p:Playlist)
+  #    RETURN p
+  #    """
+  #  )
 }
 
 type Episode {
@@ -59,15 +60,15 @@ type Episode {
   link: String
   image: String
   audio: String
-  podcast: Podcast @relation(name: "HAS_EPISODE", direction: "IN")
+  podcast: Podcast @relationship(type: "HAS_EPISODE", direction: IN)
 }
 
-type User {
+type User @exclude {
   username: String
   id: ID!
 }
 
-type PodcastSearchResult {
+type PodcastSearchResult @exclude {
   itunesId: String
   title: String
   description: String
@@ -76,7 +77,7 @@ type PodcastSearchResult {
   categories: [String]
 }
 
-type AuthToken {
+type AuthToken @exclude {
   token: String!
 }
 
@@ -89,9 +90,10 @@ type Podcast {
   image: String
 }
 
-type Playlist {
+type Playlist @auth(rules: [{ where: { owner: { id: "$jwt.id" } } }]) {
   name: String!
-  episodes: [Episode] @relation(name: "IN_PLAYLIST", direction: "IN")
+  episodes: [Episode] @relationship(type: "IN_PLAYLIST", direction: IN)
+  owner: User @relationship(type: "OWNS", direction: IN)
 }
 
 type Mutation {
@@ -109,7 +111,7 @@ type Mutation {
       } AS headers
       CALL apoc.load.jsonParams('https://api.podcastindex.org/api/1.0/podcasts/byitunesid?id=' + apoc.text.urlencode($itunesId), headers, '', '') YIELD value
       WITH value.feed AS feed
-      MATCH (u:User {id: $cypherParams.userId})
+      MATCH (u:User {id: $auth.jwt.id})
       MERGE (p:Podcast {itunesId: $itunesId})
       SET p.title       = feed.title,
           p.link        = feed.link,
@@ -120,15 +122,15 @@ type Mutation {
       WITH p
       CALL apoc.load.xml(p.feedURL) YIELD value
       UNWIND value._children AS foo
-      WITH p,[x in foo._children WHERE x._type = \"item\"] AS episodes
+      WITH p,[x in foo._children WHERE x._type = 'item'] AS episodes
       UNWIND episodes AS episode
-      WITH p,[x in episode._children WHERE x._type =\"title\"][0]._text AS title,
-          [x in episode._children WHERE x._type =\"description\"][0]._text AS summary,
-          [x in episode._children WHERE x._type=\"link\"][0]._text AS link,
-          [x in episode._children WHERE x._type=\"image\"][0].href AS image,
-          [x in episode._children WHERE x._type=\"enclosure\" AND x.type CONTAINS \"audio\" ][0].url AS audio,
-          [x in episode._children WHERE x._type=\"pubDate\"][0]._text AS pubDate,
-          [x in episode._children WHERE x._type =\"guid\"][0]._text AS guid
+      WITH p,[x in episode._children WHERE x._type ='title'][0]._text AS title,
+          [x in episode._children WHERE x._type ='description'][0]._text AS summary,
+          [x in episode._children WHERE x._type='link'][0]._text AS link,
+          [x in episode._children WHERE x._type='image'][0].href AS image,
+          [x in episode._children WHERE x._type='enclosure' AND x.type CONTAINS 'audio' ][0].url AS audio,
+          [x in episode._children WHERE x._type='pubDate'][0]._text AS pubDate,
+          [x in episode._children WHERE x._type ='guid'][0]._text AS guid
 
       MERGE (e:Episode {id: guid})
       SET e.title = title,
@@ -145,7 +147,7 @@ type Mutation {
   createPlaylist(name: String!): Playlist
     @cypher(
       statement: """
-      MATCH (u:User {id: $cypherParams.userId})
+      MATCH (u:User {id: $auth.jwt.id})
       MERGE (p:Playlist {name: $name})<-[:OWNS]-(u)
       RETURN p
       """
@@ -154,7 +156,7 @@ type Mutation {
   addEpisodeToPlaylist(name: String!, podcastId: ID!): Playlist
     @cypher(
       statement: """
-      MATCH (u:User {id: $cypherParams.userId})-[:OWNS]->(p:Playlist {name: $name})
+      MATCH (u:User {id: $auth.jwt.id})-[:OWNS]->(p:Playlist {name: $name})
       MATCH (e:Episode {id: $podcastId})
       MERGE (e)-[:IN_PLAYLIST]->(p)
       RETURN p
