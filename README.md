@@ -10,6 +10,7 @@ GRANDcase.FM is a podcast application built using [GRANDstack (GraphQL, React, A
 - **Episode 4:** Next.js & GraphQL Authentication([Video recording](https://www.youtube.com/watch?v=pB4YZBJmMl8), [git commit](https://github.com/johnymontana/grandcast.fm/commit/247aa53426901b0b2951fe152031e1efc8638341), [Blog post](https://lyonwj.com/blog/grandstack-podcast-app-next-js-graphql-authentication))
 - **Episode 5:** Chakra UI Component Library([Video recording ](https://www.youtube.com/watch?v=x0_a9tOpExc), [git commit](https://github.com/johnymontana/grandcast.fm/commit/26ab595a9c561c237acdf1c994a2344728bb1836), [Blog post](https://lyonwj.com/blog/grandstack-podcast-app-chakra-ui-responsive-nav-bar-episode-component))
 - **Episode 6:** Frontend Features Using Chakra UI, GraphQL, & Apollo Client (Playlists & Podcast search) ([Video recording](https://www.youtube.com/watch?v=UXD89QFg0tU), [git commit](https://github.com/johnymontana/grandcast.fm/commit/0efcb49a683ebe832cfc1ef9fb439544191d4c7d), [Blog post](https://lyonwj.com/blog/grandstack-podcast-app-chakra-ui-next-js-graphql-apollo-client))
+- **Episode 7:** Migrating To The Official Neo4j GraphQL Library ([Video recording](https://www.youtube.com/watch?v=4_rp1ikvFKc), [git commit](https://github.com/johnymontana/grandcast.fm/commit/cad442d313d7b1eefb5c83532e862be478425677))
 
 <hr>
 
