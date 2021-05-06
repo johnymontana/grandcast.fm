@@ -2,7 +2,8 @@ import { typeDefs } from './graphql-schema'
 import { ApolloServer } from 'apollo-server-express'
 import express from 'express'
 import neo4j from 'neo4j-driver'
-import { makeAugmentedSchema } from 'neo4j-graphql-js'
+import { Neo4jGraphQL } from '@neo4j/graphql'
+import { OGM } from '@neo4j/graphql-ogm'
 import dotenv from 'dotenv'
 import { initializeDatabase } from './initialize'
 
@@ -13,6 +14,29 @@ import { compareSync, hashSync } from 'bcrypt'
 dotenv.config()
 
 const app = express()
+
+/*
+ * Create a Neo4j driver instance to connect to the database
+ * using credentials specified as environment variables
+ * with fallback to defaults
+ */
+const driver = neo4j.driver(
+  process.env.NEO4J_URI || 'bolt://localhost:7687',
+  neo4j.auth.basic(
+    process.env.NEO4J_USER || 'neo4j',
+    process.env.NEO4J_PASSWORD || 'neo4j'
+  ),
+  {
+    encrypted: process.env.NEO4J_ENCRYPTED ? 'ENCRYPTION_ON' : 'ENCRYPTION_OFF',
+  }
+)
+
+const ogm = new OGM({
+  typeDefs,
+  driver,
+})
+
+const User = ogm.model('User')
 
 /*
  * Create an executable GraphQL schema object from GraphQL type definitions
@@ -48,63 +72,59 @@ const resolvers = {
           }
         })
     },
-    login: (obj, args, context, info) => {
-      const session = context.driver.session()
+    // login: (obj, args, context, info) => {
+    //   const session = context.driver.session()
 
-      return session
-        .run(
-          `
-        MATCH (u:User {username: $username})
-        RETURN u LIMIT 1
-      `,
-          { username: args.username }
-        )
-        .then((res) => {
-          session.close()
+    //   return session
+    //     .run(
+    //       `
+    //     MATCH (u:User {username: $username})
+    //     RETURN u LIMIT 1
+    //   `,
+    //       { username: args.username }
+    //     )
+    //     .then((res) => {
+    //       session.close()
 
-          const { id, username, password } = res.records[0].get('u').properties
-          if (!compareSync(args.password, password)) {
-            throw new Error('Authorization Error')
-          }
+    //       const { id, username, password } = res.records[0].get('u').properties
+    //       if (!compareSync(args.password, password)) {
+    //         throw new Error('Authorization Error')
+    //       }
 
-          return {
-            token: jwt.sign({ id, username }, process.env.JWT_SECRET, {
-              expiresIn: '30d',
-            }),
-          }
-        })
+    //       return {
+    //         token: jwt.sign({ id, username }, process.env.JWT_SECRET, {
+    //           expiresIn: '30d',
+    //         }),
+    //       }
+    //     })
+    // },
+    login: async (obj, args, context, info) => {
+      const [user] = await User.find({ where: { username: args.username } })
+
+      const { id, username, password } = user
+      if (!compareSync(args.password, password)) {
+        throw new Error('Authorization Error')
+      }
+
+      return {
+        token: jwt.sign({ id, username }, process.env.JWT_SECRET, {
+          expiresIn: '30d',
+        }),
+      }
     },
   },
 }
 
-const schema = makeAugmentedSchema({
+const neoSchema = new Neo4jGraphQL({
   typeDefs,
   resolvers,
+  driver,
   config: {
-    query: {
-      exclude: ['PodcastSearchResult', 'AuthToken', 'User', 'Playlist'],
-    },
-    mutation: {
-      exclude: ['PodcastSearchResult', 'AuthToken', 'User', 'Playlist'],
+    jwt: {
+      secret: process.env.JWT_SECRET,
     },
   },
 })
-
-/*
- * Create a Neo4j driver instance to connect to the database
- * using credentials specified as environment variables
- * with fallback to defaults
- */
-const driver = neo4j.driver(
-  process.env.NEO4J_URI || 'bolt://localhost:7687',
-  neo4j.auth.basic(
-    process.env.NEO4J_USER || 'neo4j',
-    process.env.NEO4J_PASSWORD || 'neo4j'
-  ),
-  {
-    encrypted: process.env.NEO4J_ENCRYPTED ? 'ENCRYPTION_ON' : 'ENCRYPTION_OFF',
-  }
-)
 
 /*
  * Perform any database initialization steps such as
@@ -133,20 +153,11 @@ const init = async (driver) => {
  */
 const server = new ApolloServer({
   context: ({ req }) => {
-    const token = req?.headers?.authorization?.slice(7)
-    let userId
-
-    if (token) {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET)
-      userId = decoded.id
-    }
     return {
-      cypherParams: { userId },
-      driver,
-      neo4jDatabase: process.env.NEO4J_DATABASE,
+      req,
     }
   },
-  schema: schema,
+  schema: neoSchema.schema,
   introspection: true,
   playground: true,
 })

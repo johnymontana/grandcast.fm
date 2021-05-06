@@ -19,6 +19,7 @@ import {
 import { AddIcon, CheckIcon } from '@chakra-ui/icons'
 
 import { gql, useMutation } from '@apollo/client'
+import moment from 'moment'
 
 const ADD_EPISODE_TO_PLAYLIST = gql`
   mutation addToPlaylist($episodeId: ID!, $playlistName: String!) {
@@ -100,7 +101,7 @@ const Episode = ({ episode, playlists }) => {
             {episode.podcast.title}
           </Text>
           <Text ml={4} as="i">
-            {`${episode.pubDate.month}/${episode.pubDate.day}/${episode.pubDate.year}`}
+            {`${moment(episode.pubDate).format('MMMM Do YYYY')}`}
           </Text>
         </Flex>
         <div style={{ marginTop: 'auto' }}>
